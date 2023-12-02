@@ -1,0 +1,60 @@
+// Express.js example
+// Checklist - 2, step - 1
+
+<!-- Endpoint for adding a week list -->
+<!-- Created a API endpoint (/add-week-list) where users can send a request to create a new week list -->
+// POST /add-week-list
+app.post('/add-week-list', authenticateUser, (req, res) => {
+    <!-- Limit Check -->
+    <!-- Before allowing the creation of a new week list, the API would check if the user already has two active week lists. If they do, the API would reject the request. -->
+  // Check if the user has reached the limit of active week lists
+  if (userHasReachedLimit(req.user.activeWeekLists)) {
+    <!-- Response Handling -->
+    <!-- The API response would communicate the success or failures of the operation, providing clear messages about the reason of the failure, here it is - 'User has reached the limit of active week lists' -->
+    // Provide information about the limit
+    return res.status(400).json({ error: 'User has reached the limit of active week lists' });
+  }
+
+  <!-- Waiting Mechanism -->
+  <!-- If the user has two active week lists, the API would provide information about when the user can create a new one. This might involve returning the end dates of the user's active week lists. -->
+  // Check if the user needs to wait for an existing week list to end
+  if (userNeedsToWait(req.user.activeWeekLists)) {
+    <!-- Response Handling -->
+    <!-- The API response would communicate the success or failures of the operation, providing clear messages about the reason of the failure, here it is - 'User needs to wait until the end of their current week list to create a new one' -->
+    // Provide information about when the user can create a new one
+    return res.status(400).json({ error: 'User needs to wait until the end of their current week list to create a new one' });
+  }
+
+  <!-- Response if no error -->
+  <!-- Here we will proceed with creating a new week list if the previous two "if" statements are false -->
+  // Proceed with creating a new week list
+  const newWeekList = createWeekList(req.user.id);
+  req.user.activeWeekLists.push(newWeekList);
+
+  <!-- Save the user data in the database -->
+  // Save the updated user data
+  saveUser(req.user);
+
+  <!-- If the new week list creation is a success then we will send a success json response -->
+  // Return success response
+  res.status(200).json({ success: true, message: 'Week list created successfully' });
+});
+
+<!-- Function to check the length of week list array, if the length of week list array is 2 then the function will fire and stop the creation of a new week list -->
+function userHasReachedLimit(activeWeekLists) {
+  return activeWeekLists.length >= 2;
+}
+
+<!-- Function to check if any of the active week list is ongoing and if it is true, then the function will fire and stop creation of a new week list  -->
+function userNeedsToWait(activeWeekLists) {
+  // Check if any of the active week lists are ongoing
+  const ongoingWeekList = activeWeekLists.find(weekList => isOngoing(weekList.endDate));
+  return ongoingWeekList !== undefined;
+}
+
+<!-- Function returns the date to check the end date of week list -->
+function isOngoing(endDate) {
+  // Implement the logic to check if a week list is ongoing based on the end date
+  const currentDate = new Date();
+  return currentDate < new Date(endDate);
+}
