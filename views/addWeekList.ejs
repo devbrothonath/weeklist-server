@@ -58,3 +58,44 @@ function isOngoing(endDate) {
   const currentDate = new Date();
   return currentDate < new Date(endDate);
 }
+
+
+<!-- Alternative -->
+const express = require('express');
+const bodyParser = require('body-parser');
+const { v4: uuidv4 } = require('uuid');
+
+const app = express();
+const port = 3000;
+
+const activeWeekLists = [];
+
+app.use(bodyParser.json());
+
+app.post('/add_weeklist', (req, res) => {
+  const { user_id, duration } = req.body;
+
+  // Check if the user already has two active week lists
+  if (activeWeekLists.filter(weeklist => weeklist.user_id === user_id).length >= 2) {
+    return res.status(400).json({ error: 'You already have two active week lists. Wait for one to end.' });
+  }
+
+  // Assuming 'duration' is provided in days for the week list
+  const end_date = new Date();
+  end_date.setDate(end_date.getDate() + duration);
+
+  const weeklist = {
+    id: uuidv4(),
+    user_id,
+    end_date,
+    tasks: []
+  };
+
+  activeWeekLists.push(weeklist);
+
+  res.status(201).json({ message: 'Week list added successfully.' });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});

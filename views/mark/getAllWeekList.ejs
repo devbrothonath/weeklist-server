@@ -1,0 +1,25 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+const port = 3000;
+
+const activeWeekLists = [];
+
+app.use(bodyParser.json());
+
+app.get('/get_weeklists', (req, res) => {
+  // Calculate time left for each active week list
+  const weeklistsWithTimeLeft = activeWeekLists.map(weeklist => ({
+    id: weeklist.id,
+    user_id: weeklist.user_id,
+    time_left_seconds: (new Date(weeklist.end_date).getTime() - Date.now()) / 1000,
+    tasks: weeklist.tasks
+  }));
+
+  res.json({ weeklists: weeklistsWithTimeLeft });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});

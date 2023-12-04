@@ -1,0 +1,37 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+const port = 3000;
+
+const activeWeekLists = [];
+
+app.use(bodyParser.json());
+
+app.put('/mark_task/:weeklist_id/:task_id', (req, res) => {
+  const { weeklist_id, task_id } = req.params;
+
+  // Find the week list by ID
+  const weeklist = activeWeekLists.find(weeklist => weeklist.id === weeklist_id);
+
+  if (!weeklist) {
+    return res.status(404).json({ error: 'Week list not found.' });
+  }
+
+  // Find the task by ID
+  const task = weeklist.tasks.find(task => task.id === task_id);
+
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found.' });
+  }
+
+  // Mark/unmark the task and save the completion time
+  task.completed = !task.completed;
+  task.completion_time = new Date();
+
+  res.status(200).json({ message: 'Task marked/unmarked successfully.' });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});

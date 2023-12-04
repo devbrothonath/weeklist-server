@@ -1,0 +1,57 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const { v4: uuidv4 } = require('uuid');
+
+const app = express();
+const port = 3000;
+
+const activeWeekLists = [];
+
+app.use(bodyParser.json());
+
+app.put('/update_weeklist/:weeklist_id', (req, res) => {
+  const { weeklist_id } = req.params;
+  const { description } = req.body;
+
+  // Find the week list by ID
+  const weeklist = activeWeekLists.find(weeklist => weeklist.id === weeklist_id);
+
+  if (!weeklist) {
+    return res.status(404).json({ error: 'Week list not found.' });
+  }
+
+  // Check if the week list is within 24 hours of creation
+  if (Date.now() - new Date(weeklist.created_at).getTime() > 86400000) {
+    return res.status(400).json({ error: 'Cannot update week list beyond 24 hours of creation.' });
+  }
+
+  // Update the description
+  weeklist.description = description;
+
+  res.status(200).json({ message: 'Week list updated successfully.' });
+});
+
+app.delete('/delete_weeklist/:weeklist_id', (req, res) => {
+  const { weeklist_id } = req.params;
+
+  // Find the week list by ID
+  const weeklistIndex = activeWeekLists.findIndex(weeklist => weeklist.id === weeklist_id);
+
+  if (weeklistIndex === -1) {
+    return res.status(404).json({ error: 'Week list not found.' });
+  }
+
+  // Check if the week list is within 24 hours of creation
+  if (Date.now() - new Date(activeWeekLists[weeklistIndex].created_at).getTime() > 86400000) {
+    return res.status(400).json({ error: 'Cannot delete week list beyond 24 hours of creation.' });
+  }
+
+  // Remove the week list
+  activeWeekLists.splice(weeklistIndex, 1);
+
+  res.status(200).json({ message: 'Week list deleted successfully.' });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
