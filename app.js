@@ -1,17 +1,17 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const authRoutes = require("./routes/authRoutes")
-const cookieParser = require("cookie-parser")
+const authRoutes = require("./routes/authRoutes");
+const cookieParser = require("cookie-parser");
+const dotenv = require("dotenv").config();
 
 const app = express();
 
-const port = 3500;
+const port = process.env.PORT;
 
-const dbURI =
-  "mongodb+srv://namDoyun:doyunblog@cluster0.49z1yqf.mongodb.net/weeklist-server";
+const dbURL = process.env.DB_URL;
 
 mongoose
-  .connect(dbURI)
+  .connect(dbURL)
   .then((result) => app.listen(port))
   .catch((err) => console.log(err));
 
